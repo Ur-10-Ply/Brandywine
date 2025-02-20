@@ -11,3 +11,5 @@ scalable-discord-bot/
 │── requirements.txt              # Dependencies for Python
 │── README.md                     # Documentation
 │── LICENSE                       # Open-source license
+
+Format template
