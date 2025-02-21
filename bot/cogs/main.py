@@ -1,63 +1,28 @@
-import os
 import discord
 from discord.ext import commands
-from dotenv import load_dotenv
+import os
+from config import DISCORD_TOKEN
 
-
-# Load environment variables
-load_dotenv()
-TOKEN = os.getenv('DISCORD_TOKEN')
-
-# Define bot intents
 intents = discord.Intents.default()
-intents.message_content = True  # Required for message commands
+intents.message_content = True
 
-# Initialize bot
 bot = commands.Bot(command_prefix='!', intents=intents)
 
-# Event: Bot is ready
+# Load cogs
+async def load_cogs():
+    for filename in os.listdir('./bot/cogs'):
+        if filename.endswith('.py'):
+            await bot.load_extension(f'bot.cogs.{filename[:-3]}')
+
 @bot.event
 async def on_ready():
-    print(f'Logged in as {bot.user}')
-    print(f'Connected to {len(bot.guilds)} servers')
+    print(f'Logged in as {bot.user.name}')
 
-# Command: Ping
-@bot.command()
-async def ping(ctx):
-    await ctx.send(f'Pong! {round(bot.latency * 1000)}ms')
+async def main():
+    async with bot:
+        await load_cogs()
+        await bot.start(DISCORD_TOKEN)
 
-# Dynamic Module Loader
-@bot.command()
-async def load(ctx, extension):
-    try:
-        bot.load_extension(f'modules.{extension}')
-        await ctx.send(f'Loaded {extension} successfully.')
-    except Exception as e:
-        await ctx.send(f'Error loading {extension}: {e}')
-
-@bot.command()
-async def unload(ctx, extension):
-    try:
-        bot.unload_extension(f'modules.{extension}')
-        await ctx.send(f'Unloaded {extension} successfully.')
-    except Exception as e:
-        await ctx.send(f'Error unloading {extension}: {e}')
-
-@bot.command()
-async def reload(ctx, extension):
-    try:
-        bot.reload_extension(f'modules.{extension}')
-        await ctx.send(f'Reloaded {extension} successfully.')
-    except Exception as e:
-        await ctx.send(f'Error reloading {extension}: {e}')
-
-# Load all cogs on startup
-def load_modules():
-    for filename in os.listdir('./modules'):
-        if filename.endswith('.py'):
-            bot.load_extension(f'modules.{filename[:-3]}')
-
-load_modules()
-
-# Run bot
-bot.run(TOKEN)
+if __name__ == '__main__':
+    import asyncio
+    asyncio.run(main())
